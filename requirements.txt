@@ -1,0 +1,5 @@
+label_studio
+label_studio_sdk
+openai
+tqdm
+base64
