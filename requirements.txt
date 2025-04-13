@@ -1,5 +1,5 @@
 label_studio
-label_studio_sdk
+label-studio-sdk
 openai
 tqdm
 base64

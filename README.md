@@ -10,6 +10,10 @@ This tool is designed to assist annotators in generating attribute annotations f
 pip install -r requirements.txt
 ```
 
+## Note
+Your Label Studio server should be on before using the tool. For instructions on how to start the Label Studio server, check out the **Label-studio project setup** branch.
+
+
 ## Configuration
 Modify the configuration in the ```./configs``` directory. The structure of the configuration file is as follow:
 ```

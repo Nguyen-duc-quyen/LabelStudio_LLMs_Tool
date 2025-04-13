@@ -8,6 +8,8 @@ from label_studio_sdk import Client
 import label_studio as ls
 from utils.chat_gpt_query import *
 from utils.convert_utils import *
+from utils.utils import *
+from utils.label_studio_server import *
 import os
 
 
@@ -32,69 +34,39 @@ if __name__ == "__main__":
     config_path = args.config
     with open(config_path, "r") as stream:
         config = yaml.safe_load(stream)
+    
+    MAX_RETRIES = config["MAX_RETRIES"]
         
     # Config OpenAI Client
     openai_client = OpenAI(api_key=config["openai_api_key"])
     
-    prompt = """
-    Analyze this shoe image and return structured annotations in JSON format using this schema:
-    Condition = {"attribute": [str]}
-    Return: list[Condition]
-    Ensure attribute and value follows this mapping:
-    "Function": ["Daily", "Fashion", "Running", "Hiking", "Walking", "Soccer", "Basketball",
-                 "Training", "Gym", "Golf", "Tennis", "Skateboard", "Snow", "Surfing", "Swimming", "Aqua", "Combat"],
-    "Type": ["Sneakers", "Sports", "Trainers", "Dress Shoes", "Sandals", "Heels", "Pumps", "Boots", "Traditional", "Slipper"],
-    "Main Color": ["Neutral tones", "Pastels", "Bright/Variant", "Dark/Moody", "Monochrome"],
-    "Sub Color": ["Neutral tones", "Pastels", "Bright/Variant", "Dark/Moody", "Monochrome"],
-    "Upper Structure": ["No Upper", "One-Piece Upper", "Multi-Piece Upper"],
-    "Closure Type": ["Shoelace", "Slip-on", "Velcro", "Straps", "Buckle", "Zipper", "Hook and Loop", "Dial"],
-    "Toe Shape": ["Round", "Pointed", "Square", "Almond"],
-    "Heel Type": ["Flat", "Block", "Stiletto", "Wedge"]
-    The key should be a string corresponding to each of the attributes listed above.
-    The value should be a list containing the corresponding labels from the provided categories
-    Return only 1 JSON dictionary, which can be parsed using Python. Follow the possible values for each attribute and do not generate your own attributes.
-    """
+    prompt = create_prompt_from_config(config["prompt"])
     
-    # Config Label studio Client
-    ls_client = Client(url=config["label_studio_url"], api_key=config["label_studio_api_key"])
-    ls_project = ls_client.get_project(id=config["project_id"])
-    
-    # Get all images' urls from the server
-    tasks_list = ls_project.get_tasks()
-    id2image_path = {}
-    
-    logger.info("Getting all the image urls from project id: {}".format(config["project_id"]))
-    # If the image are stored remotely
-    if config["data_storage"] == "remote":
-        for task in tqdm(tasks_list):
-            if 'image' in task['data']:
-                id2image_path[task["id"]] = config["label_studio_url"] + task['data'].get('image')
-            else:
-                continue
-    elif config["data_storage"] == "local":
-        for task in tqdm(tasks_list):
-            if 'image' in task['data']:
-                image_file = task['data'].get('image').split("/")[-1]
-                image_file = image_file.split("-")[-1]
-                image_path = os.path.join(config["data_dir"], image_file)
-                id2image_path[task["id"]] = image_path
-    else:
-        logger.error("Unsupported data storage format!")
-        
-    # Get the result template
-    template_file = config["template"]
-    with open(template_file) as f:
-        template = json.load(f)
-    
+    # Setup Label studio Client
+    ls_project, tasks_list, id2image_path, template = setup(config, logger)
     
     logger.info("Getting the results from OpenAI ...")
-    for task_id in tqdm(list(id2image_path.keys())[:5]):
+    for task_id in tqdm(list(id2image_path.keys())):
         image_path = id2image_path[task_id]
-        llm_result = get_annotation_for_local_image(openai_client, image_path, prompt)
+        retries = 0
         
-        # Convert to the desire format
-        prediction = convert_gpt2labelstudio(data=llm_result, orig_template=template)
-        
+        # Repeat the query until the result is valid
+        while(retries < MAX_RETRIES):
+            try:
+                # Query using the prompt
+                output = prompt.query(openai_client, image_path)
+                # Parse the output 
+                prediction = prompt.parse(output, template)
+                break # Successfully parsed the output, exit the loop
+            except Exception as e:
+                logger.error("Error in querying {}! Retrying {}".format(image_path, retries))
+                logger.error(e)
+                retries += 1
+                continue
+        else:
+            logger.error("Failed to get the results from OpenAI after {} retries! Skipping the image.".format(MAX_RETRIES))
+            continue
+         
         # Check if the task has already have prediction
         predictions = ls_project.get_task(task_id)["predictions"]
         
@@ -108,5 +80,5 @@ if __name__ == "__main__":
         else:
             # Update the prediction
             prediction_id = predictions[0]["id"]
-            ls_project.make_request("PATCH", "/api/predictions/{}".format(prediction_id), json=template)
+            ls_project.make_request("PATCH", "/api/predictions/{}".format(prediction_id), json=prediction)
         
