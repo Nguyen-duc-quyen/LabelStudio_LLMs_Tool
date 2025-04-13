@@ -1,0 +1,62 @@
+<View>
+  <Image name="image" value="$image"/>
+
+  <Header value="Please answer these questions:"/>
+
+  <!-- Questions Section -->
+  <View style="display: grid; grid-template-columns: 1fr 10fr 1fr 3fr; column-gap: 1em">
+    <Header value="Q1:"/>
+    <Text name="q1" value="Function"/>
+    <Header value="A1:"/>
+    <TextArea name="answer1" toName="q1" rows="1" maxSubmissions="1"/>
+  </View>
+
+  <View style="display: grid; grid-template-columns: 1fr 10fr 1fr 3fr; column-gap: 1em">
+    <Header value="Q2:"/>
+    <Text name="q2" value="Type"/>
+    <Header value="A2:"/>
+    <TextArea name="answer2" toName="q2" rows="1" maxSubmissions="1"/>
+  </View>
+
+  <View style="display: grid; grid-template-columns: 1fr 10fr 1fr 3fr; column-gap: 1em">
+    <Header value="Q3:"/>
+    <Text name="q3" value="Main Color"/>
+    <Header value="A3:"/>
+    <TextArea name="answer3" toName="q3" rows="1" maxSubmissions="1"/>
+  </View>
+
+  <View style="display: grid; grid-template-columns: 1fr 10fr 1fr 3fr; column-gap: 1em">
+    <Header value="Q4:"/>
+    <Text name="q4" value="Sub Color"/>
+    <Header value="A4:"/>
+    <TextArea name="answer4" toName="q4" rows="1" maxSubmissions="1"/>
+  </View>
+
+  <View style="display: grid; grid-template-columns: 1fr 10fr 1fr 3fr; column-gap: 1em">
+    <Header value="Q5:"/>
+    <Text name="q5" value="Upper Structure"/>
+    <Header value="A5:"/>
+    <TextArea name="answer5" toName="q5" rows="1" maxSubmissions="1"/>
+  </View>
+
+  <View style="display: grid; grid-template-columns: 1fr 10fr 1fr 3fr; column-gap: 1em">
+    <Header value="Q6:"/>
+    <Text name="q6" value="Closure Type"/>
+    <Header value="A6:"/>
+    <TextArea name="answer6" toName="q6" rows="1" maxSubmissions="1"/>
+  </View>
+
+  <View style="display: grid; grid-template-columns: 1fr 10fr 1fr 3fr; column-gap: 1em">
+    <Header value="Q7:"/>
+    <Text name="q7" value="Toe Shape"/>
+    <Header value="A7:"/>
+    <TextArea name="answer7" toName="q7" rows="1" maxSubmissions="1"/>
+  </View>
+
+  <View style="display: grid; grid-template-columns: 1fr 10fr 1fr 3fr; column-gap: 1em">
+    <Header value="Q8:"/>
+    <Text name="q8" value="Heel Type"/>
+    <Header value="A8:"/>
+    <TextArea name="answer8" toName="q8" rows="1" maxSubmissions="1"/>
+  </View>
+</View>
