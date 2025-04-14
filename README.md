@@ -30,6 +30,12 @@ template: "./result_templates/project_4_result_template.json" # Prediction templ
 ```
 
 ## Usage
+Starting the tool in the terminal:
+```
+label-studio start
+```
+
+Generating predictions for a specific project based on the configuration file and pushing them to the Label Studio server:
 ```
 python main.py --config ./configs/chat_gpt_sample.yaml
 ```

@@ -11,7 +11,9 @@ class Prompt(ABC):
         Each prompt has a different type of query, thus we need different parsing strategies.
         Each class is a designed for a specific prompt
     """
-    def __init__(self):
+    def __init__(self, origin=None, model=None):
+        self.origin = origin
+        self.model = model
         pass
     
     
@@ -32,8 +34,8 @@ class Prompt(ABC):
     
 
 class Prompt_1(Prompt):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, origin=None, model=None):
+        super().__init__(origin, model)
         self.prompt = """
     Analyze this shoe image and return structured annotations in JSON format using this schema:
     Condition = {"attribute": [str]}
@@ -55,7 +57,7 @@ class Prompt_1(Prompt):
     
     def query(self, client: openai.Client, image_path: str) -> str:
         response = client.chat.completions.create(
-        model="gpt-4o",
+        model=self.model,
         messages=[
             {
                 "role": "user",
@@ -103,7 +105,7 @@ class Prompt_1(Prompt):
                 result["value"]["text"] = [", ".join(json_response["Heel Type"])]
             else:
                 continue
-            result["origin"] = "ChatGPT"
+            result["origin"] = self.origin
     
         return template
 
@@ -112,8 +114,8 @@ class Prompt_2(Prompt):
     """
         Dummy prompt class for testing purposes only.
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, origin=None, model=None):
+        super().__init__(origin, model)
     
     def query(self, client: openai.Client, image_path: str) -> str:
         return "This is for testing purposes only."

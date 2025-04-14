@@ -11,3 +11,5 @@ template: ".\\result_templates\\project_4_result_template.json"
 
 # Prompt configuration
 prompt: prompts.Prompt_1
+model: gpt-4o
+origin: ChatGPT-4o_baseline

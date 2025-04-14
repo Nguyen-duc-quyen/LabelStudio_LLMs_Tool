@@ -35,12 +35,14 @@ if __name__ == "__main__":
     with open(config_path, "r") as stream:
         config = yaml.safe_load(stream)
     
-    MAX_RETRIES = config["MAX_RETRIES"]
+
+    #Defaults to 5 (might not be specified in the config file)
+    MAX_RETRIES = config.get("MAX_RETRIES", 5)
         
     # Config OpenAI Client
     openai_client = OpenAI(api_key=config["openai_api_key"])
     
-    prompt = create_prompt_from_config(config["prompt"])
+    prompt = create_prompt_from_config(config["prompt"], model=config["model"], origin=config["origin"])
     
     # Setup Label studio Client
     ls_project, tasks_list, id2image_path, template = setup(config, logger)
