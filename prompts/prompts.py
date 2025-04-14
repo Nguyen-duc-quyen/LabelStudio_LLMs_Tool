@@ -109,8 +109,173 @@ class Prompt_1(Prompt):
     
         return template
 
-
 class Prompt_2(Prompt):
+    def __init__(self, origin=None, model=None):
+        super().__init__(origin, model)
+
+        self.prompt = "Analyze this shoe image and return annotations as per JSON schema."
+
+        self.system_msg = (
+            "You are a visual assistant that analyzes images of shoes and classifies them based on predefined categories. "
+            "Always return a JSON object that follows the provided schema exactly. Each field should contain a single string label."
+        )
+
+        enum_string = lambda options: {
+            "type": "string",
+            "enum": options
+        }
+
+        categories = {
+            "Function": ["Daily", "Fashion", "Running", "Hiking", "Walking", "Soccer", "Basketball",
+                         "Training", "Gym", "Golf", "Tennis", "Skateboard", "Snow", "Surfing", "Swimming", "Aqua", "Combat"],
+            "Type": ["Sneakers", "Sports", "Trainers", "Dress Shoes", "Sandals", "Heels", "Pumps", "Boots", "Traditional", "Slipper"],
+            "Main Color": ["Neutral tones", "Pastels", "Bright/Variant", "Dark/Moody", "Monochrome"],
+            "Sub Color": ["Neutral tones", "Pastels", "Bright/Variant", "Dark/Moody", "Monochrome"],
+            "Upper Structure": ["No Upper", "One-Piece Upper", "Multi-Piece Upper"],
+            "Closure Type": ["Shoelace", "Slip-on", "Velcro", "Straps", "Buckle", "Zipper", "Hook and Loop", "Dial"],
+            "Toe Shape": ["Round", "Pointed", "Square", "Almond"],
+            "Heel Type": ["Flat", "Block", "Stiletto", "Wedge"]
+        }
+        
+        self.schema = {
+            "type": "object",
+            "properties": {k: enum_string(v) for k, v in categories.items()},
+            "required": list(categories.keys()),
+            "additionalProperties": False
+}
+
+    def query(self, client: openai.Client, image_path: str) -> str:
+        response = client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": self.system_msg},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": self.prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{encode_image(image_path)}",
+                            },
+                        },
+                    ],
+                },
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "shoe_annotation",
+                    "schema": self.schema,
+                    "strict": True
+                }
+            }
+        )
+
+        return response.choices[0].message.content
+
+    def parse(self, output: str, result_template: dict):
+        json_response = json.loads(output)
+        template = copy.deepcopy(result_template)
+
+        for result in template["result"]:
+            attr = result["from_name"]
+            if attr.startswith("answer") and attr[-1].isdigit():
+                index = int(attr[-1])
+                keys = list(json_response.keys())
+                if index - 1 < len(keys):
+                    result["value"]["text"] = [json_response[keys[index - 1]]]
+                    result["origin"] = self.origin
+
+        return template
+    
+class Prompt_3(Prompt):
+    def __init__(self, origin=None, model=None):
+        super().__init__(origin, model)
+
+        self.prompt = "Analyze this shoe image and return annotations as per JSON schema."
+
+        self.system_msg = (
+            "You are a visual assistant that analyzes shoe images and classifies them based on predefined categories. "
+            "For each attribute, return an array of one or more applicable labels. Only use values from the provided schema and "
+            "return a JSON object matching the schema exactly."
+        )
+
+        enum_vals = lambda options: {
+            "type": "array",
+            "items": {"type": "string", "enum": options}
+        }
+
+        categories = {
+            "Function": ["Daily", "Fashion", "Running", "Hiking", "Walking", "Soccer", "Basketball",
+                         "Training", "Gym", "Golf", "Tennis", "Skateboard", "Snow", "Surfing", "Swimming", "Aqua", "Combat"],
+            "Type": ["Sneakers", "Sports", "Trainers", "Dress Shoes", "Sandals", "Heels", "Pumps", "Boots", "Traditional", "Slipper"],
+            "Main Color": ["Neutral tones", "Pastels", "Bright/Variant", "Dark/Moody", "Monochrome"],
+            "Sub Color": ["Neutral tones", "Pastels", "Bright/Variant", "Dark/Moody", "Monochrome"],
+            "Upper Structure": ["No Upper", "One-Piece Upper", "Multi-Piece Upper"],
+            "Closure Type": ["Shoelace", "Slip-on", "Velcro", "Straps", "Buckle", "Zipper", "Hook and Loop", "Dial"],
+            "Toe Shape": ["Round", "Pointed", "Square", "Almond"],
+            "Heel Type": ["Flat", "Block", "Stiletto", "Wedge"]
+        }
+
+        self.schema = {
+            "type": "object",
+            "properties": {k: enum_vals(v) for k, v in categories.items()},
+            "required": list(categories.keys()),
+            "additionalProperties": False
+        }
+
+    def query(self, client: openai.Client, image_path: str) -> str:
+        response = client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": self.system_msg},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": self.prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{encode_image(image_path)}",
+                            },
+                        },
+                    ],
+                },
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "shoe_annotation",
+                    "schema": self.schema,
+                    "strict": True
+                }
+            }
+        )
+
+        return response.choices[0].message.content
+
+    def parse(self, output: str, result_template: dict):
+        json_response = json.loads(output)
+        template = copy.deepcopy(result_template)
+
+        for result in template["result"]:
+            attr = result["from_name"]
+            if attr.startswith("answer") and attr[-1].isdigit():
+                index = int(attr[-1])
+                keys = list(json_response.keys())
+                if index - 1 < len(keys):
+                    key = keys[index - 1]
+                    val = json_response[key]
+                    if isinstance(val, list):
+                        result["value"]["text"] = [", ".join(val)]
+                    else:
+                        result["value"]["text"] = [val]
+                    result["origin"] = self.origin
+
+        return template
+    
+class Prompt_4(Prompt):
     """
         Dummy prompt class for testing purposes only.
     """

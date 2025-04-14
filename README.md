@@ -26,7 +26,12 @@ label_studio_api_key: ""                                        # Label Studio K
 project_id: 4                                                   # Project ID (get from the server)
 data_storage: "local"                                           # Data Storage mode "local" or "remote"
 data_dir: ""                                                    # Data directory (for "local" mode only)
-template: "./result_templates/project_4_result_template.json" # Prediction template file
+template: "./result_templates/project_4_result_template.json"   # Prediction template file
+
+# Prompt configuration                                         
+prompt: prompts.Prompt_1                                        # Specific prompt for generating predictions
+model: gpt-4o                                                   # Model name (gpt-4o, fine-tuned model)
+origin: ChatGPT-4o_baseline                                     # Value to keep track of the model origin used for predictions (baseline, fine-tunedv1, fine-tunedv2, etc.)
 ```
 
 ## Usage
