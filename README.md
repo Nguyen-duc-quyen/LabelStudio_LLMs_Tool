@@ -42,5 +42,5 @@ label-studio start
 
 Generating predictions for a specific project based on the configuration file and pushing them to the Label Studio server:
 ```
-python main.py --config ./configs/chat_gpt_sample.yaml
+python my_app.py
 ```
