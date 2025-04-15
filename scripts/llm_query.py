@@ -6,11 +6,17 @@ from tqdm import tqdm
 from openai import OpenAI
 from label_studio_sdk import Client
 import label_studio as ls
+import os
+
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from utils.chat_gpt_query import *
 from utils.convert_utils import *
 from utils.utils import *
 from utils.label_studio_server import *
-import os
+
+import time
 
 
 if __name__ == "__main__":
@@ -27,7 +33,7 @@ if __name__ == "__main__":
     
     
     # Logging to terrminal
-    logger = logging.getLogger("Label Studio LLM tool")
+    logger = logging.getLogger("LLM Query Module")
     
     console_handler = logging.StreamHandler()
     console_handler.setLevel(getattr(logging, config["logging"]))
@@ -101,4 +107,4 @@ if __name__ == "__main__":
             # Update the prediction
             prediction_id = predictions[0]["id"]
             ls_project.make_request("PATCH", "/api/predictions/{}".format(prediction_id), json=prediction)
-        
+    

@@ -3,3 +3,4 @@ label-studio-sdk
 openai
 tqdm
 base64
+click
