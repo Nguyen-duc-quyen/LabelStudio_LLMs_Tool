@@ -11,8 +11,9 @@ def create_prompt_from_config(prompt_config) -> object:
     Returns:
         object: Prompt object
     """
-    class_path = prompt_config
+    class_path = prompt_config["class"]
     module_name, class_name = class_path.rsplit('.', 1)
+    params = prompt_config.get('params', {})
     
     # Import the module dynamically
     module = importlib.import_module(module_name)
@@ -21,6 +22,6 @@ def create_prompt_from_config(prompt_config) -> object:
     prompt_class = getattr(module, class_name)
     
     # Create an instance of the class
-    prompt_instance = prompt_class()
+    prompt_instance = prompt_class(**params)
     
     return prompt_instance

@@ -19,21 +19,23 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, help="System config", default="./configs/chat_gpt_40.yaml")
     args = parser.parse_args()
     
-    # Logging to terrminal
-    logger = logging.getLogger("Label Studio LLM tool")
-    
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
-    logger.propagate = False
-    logger.setLevel(logging.INFO)
     
     # Read the configuration
     config_path = args.config
     with open(config_path, "r") as stream:
         config = yaml.safe_load(stream)
+    
+    
+    # Logging to terrminal
+    logger = logging.getLogger("Label Studio LLM tool")
+    
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(getattr(logging, config["logging"]))
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    logger.propagate = False
+    logger.setLevel(getattr(logging, config["logging"]))
     
 
     #Defaults to 5 (might not be specified in the config file)
@@ -42,13 +44,13 @@ if __name__ == "__main__":
     # Config OpenAI Client
     openai_client = OpenAI(api_key=config["openai_api_key"])
     
-    prompt = create_prompt_from_config(config["prompt"], model=config["model"], origin=config["origin"])
+    prompt = create_prompt_from_config(config["prompt"])
     
     # Setup Label studio Client
     ls_project, tasks_list, id2image_path, template = setup(config, logger)
     
     logger.info("Getting the results from OpenAI ...")
-    for task_id in tqdm(list(id2image_path.keys())):
+    for index, task_id in tqdm(enumerate(list(id2image_path.keys())[:5])):
         image_path = id2image_path[task_id]
         retries = 0
         
@@ -59,10 +61,26 @@ if __name__ == "__main__":
                 output = prompt.query(openai_client, image_path)
                 # Parse the output 
                 prediction = prompt.parse(output, template)
+                
+                if index == 0:
+                    logger.debug("====================== DEBUGGING ======================")
+                    logger.debug("Output: {}".format(output))
+                    logger.debug("Prediction: {}".format(prediction))
+                    logger.debug("Model: {}".format(prompt.model))
+                    logger.debug("Origin: {}".format(prompt.origin))
+                
                 break # Successfully parsed the output, exit the loop
-            except Exception as e:
+            except openai.BadRequestError as e:
                 logger.error("Error in querying {}! Retrying {}".format(image_path, retries))
                 logger.error(e)
+                output = None
+                prediction = None
+                retries = MAX_RETRIES
+                continue
+            except Exception as e:
+                logger.error("Error in querying {}! Retrying {}".format(image_path, retries))
+                logger.error(type(e))
+                output = None
                 retries += 1
                 continue
         else:

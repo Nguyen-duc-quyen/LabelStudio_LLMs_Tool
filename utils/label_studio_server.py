@@ -90,6 +90,6 @@ if __name__ == "__main__":
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
     logger.propagate = False
-    logger.setLevel(logging.INFO)
+    logger.setLevel(getattr(logging, config["logging"]))
     
     setup(config, logger)

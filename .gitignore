@@ -1,3 +1,5 @@
 configs/chat_gpt_40.yaml
 dataset
 **__pycache__
+annotations/formatted_annotations
+annotations/original_annotations

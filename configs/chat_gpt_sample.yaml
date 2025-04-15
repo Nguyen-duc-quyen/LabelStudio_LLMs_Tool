@@ -10,6 +10,14 @@ data_dir: "E:\\Code\\KAIST\\DEAL-ShoeDesign\\ChatGPT_ShoeGen\\dataset\\project_4
 template: ".\\result_templates\\project_4_result_template.json"
 
 # Prompt configuration
-prompt: prompts.Prompt_1
-model: gpt-4o
-origin: ChatGPT-4o_baseline
+prompt: 
+  class: prompts.Prompt_3
+  params:
+    model: gpt-4o
+    origin: ChatGPT-4o_baseline
+
+# Program configuration
+MAX_RETRIES: 5
+
+# Logging level
+logging: "DEBUG"

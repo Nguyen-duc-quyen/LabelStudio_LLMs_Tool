@@ -275,7 +275,7 @@ class Prompt_3(Prompt):
 
         return template
     
-class Prompt_4(Prompt):
+class Prompt_Test(Prompt):
     """
         Dummy prompt class for testing purposes only.
     """
